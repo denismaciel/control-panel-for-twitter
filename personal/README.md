@@ -22,7 +22,7 @@ The stable runtime directory is `~/.local/share/twitter-personal`; the config is
 `TWITTER_PERSONAL_OUTPUT`, `TWITTER_PERSONAL_CONFIG`, `TWITTER_PERSONAL_CDP`.
 Desktop Chromium's CDP endpoint is `127.0.0.1:9226`. The watcher owns an extensions
 tab and a Twitter test tab; other tabs are not reloaded. Ctrl-C stops watching.
-A failed check/build is reported; fix the issue and save to retry. A successful
+A failed check/build is reported; fix the issue and save to retry. Each reload also runs the DOM regression fixtures. A successful
 reload prints a page snapshot and browser logs; inspect these before continuing.
 Run browser regression fixtures explicitly with a Playwriter session:
 

@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import {fileURLToPath} from 'node:url'
+import {fileURLToPath, pathToFileURL} from 'node:url'
 import {spawnSync} from 'node:child_process'
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const output = process.env.TWITTER_PERSONAL_OUTPUT || path.join(os.homedir(),'.local/share/twitter-personal')
@@ -22,7 +22,7 @@ function build() {
   console.log(run(process.execPath,['--test',...fs.readdirSync(path.join(root,'personal/tests')).filter(n=>n.endsWith('.test.mjs')).map(n=>'personal/tests/'+n)]))
   console.log(run(process.execPath,['personal/scripts/build.mjs',output,...(fs.existsSync(config)?[config]:[])]))
   if(session) {
-    const code=fs.readFileSync(path.join(root,'personal/scripts/reload.js'),'utf8').replace('__TWITTER_PERSONAL_IDENTITY__',fs.readFileSync(path.join(root,'personal/identity.json'),'utf8'))
+    const code=fs.readFileSync(path.join(root,'personal/scripts/reload.js'),'utf8').replace('__TWITTER_PERSONAL_IDENTITY__',fs.readFileSync(path.join(root,'personal/identity.json'),'utf8')).replace('__TWITTER_PERSONAL_BROWSER_TEST__',JSON.stringify(pathToFileURL(path.join(root,'personal/tests/browser.mjs')).href))
     console.log(run('playwriter',['-s',session,'--timeout','30000','-e',code]))
   }
 }

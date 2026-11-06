@@ -1,5 +1,7 @@
 // Executed by Playwriter, in a dedicated session owned by twitter-personal-dev.
 const identity = __TWITTER_PERSONAL_IDENTITY__
+const tests = await import(__TWITTER_PERSONAL_BROWSER_TEST__ + '?t=' + Date.now())
+console.log(await tests.run({context}))
 if (!state.extensions || state.extensions.isClosed()) {
   state.extensions = await context.newPage()
   await state.extensions.goto('chrome://extensions/', {waitUntil:'domcontentloaded'})
