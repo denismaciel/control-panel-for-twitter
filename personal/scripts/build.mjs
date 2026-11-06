@@ -9,7 +9,7 @@ if (output === root || root.startsWith(output + path.sep)) throw new Error('Outp
 const config = process.argv[3] ? JSON.parse(fs.readFileSync(process.argv[3], 'utf8')) : {settings: {}, upstreamSettings: {}}
 validateConfig(config, fs.readFileSync(path.join(root, 'types.d.ts'), 'utf8'))
 fs.mkdirSync(output, {recursive: true})
-for (const name of ['_locales', 'icons', 'options.css', 'options-icon.png', 'script.js', 'LICENSE', 'NOTICE', 'personal/config.js', 'personal/storage.js', 'personal/text-only.js', 'personal/options.js']) {
+for (const name of ['_locales', 'icons', 'options.css', 'options-icon.png', 'script.js', 'LICENSE', 'NOTICE', 'personal/storage.js', 'personal/text-only.js', 'personal/options.js']) {
   fs.mkdirSync(path.dirname(path.join(output, name)), {recursive: true})
   fs.cpSync(path.join(root, name), path.join(output, name), {recursive: true})
 }
@@ -34,6 +34,6 @@ const manifest = JSON.parse(fs.readFileSync(path.join(root, 'manifest.mv3.json')
 if (manifest.content_scripts.length !== 1 || JSON.stringify(manifest.content_scripts[0].js) !== '["content.js"]') throw new Error('Content script integration changed; review upstream')
 manifest.name = 'Control Panel for Twitter · Personal'
 manifest.key = JSON.parse(fs.readFileSync(path.join(root, 'personal/identity.json'), 'utf8')).key
-manifest.content_scripts[0].js = ['personal/config.js', 'personal/storage.js', 'content.js', 'personal/text-only.js']
+manifest.content_scripts[0].js = ['personal/storage.js', 'content.js', 'personal/text-only.js']
 fs.writeFileSync(path.join(output, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n')
 console.log(output)
