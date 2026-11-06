@@ -34,6 +34,6 @@ const manifest = JSON.parse(fs.readFileSync(path.join(root, 'manifest.mv3.json')
 if (manifest.content_scripts.length !== 1 || JSON.stringify(manifest.content_scripts[0].js) !== '["content.js"]') throw new Error('Content script integration changed; review upstream')
 manifest.name = 'Control Panel for Twitter · Personal'
 manifest.key = JSON.parse(fs.readFileSync(path.join(root, 'personal/identity.json'), 'utf8')).key
-manifest.content_scripts[0].js = ['personal/storage.js', 'content.js', 'personal/text-only.js']
+manifest.content_scripts[0].js = ['personal/config.js', 'personal/storage.js', 'content.js', 'personal/text-only.js']
 fs.writeFileSync(path.join(output, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n')
 console.log(output)
