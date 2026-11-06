@@ -8,10 +8,11 @@
   style.textContent = `
     [data-cpft-text-only] [data-cpft-media] { display: none !important; }
     .cpft-card-link { display: none; }
-    [data-cpft-text-only] .cpft-card-link { display: block; margin: 8px 0; color: inherit; }
+    [data-cpft-text-only] .cpft-card-link { display: block; margin: 8px 0; color: inherit; font: 14px/1.4 system-ui, sans-serif; }
     .cpft-media-toggle { display: block; margin: 8px 0; padding: 5px 10px;
       color: inherit; background: transparent; border: 1px solid currentColor;
-      border-radius: 16px; cursor: pointer; font: inherit; font-size: 13px; }
+      border-radius: 16px; cursor: pointer; font: 13px/1.4 system-ui, sans-serif;
+      width: fit-content; max-width: 100%; align-self: flex-start; }
   `
   document.documentElement.append(style)
 

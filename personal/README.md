@@ -17,6 +17,8 @@ node personal/scripts/dev.mjs --once
 node personal/scripts/dev.mjs --build-only
 ```
 
+The fork default branch is `personal`; `master` remains an upstream mirror.
+
 The stable runtime directory is `~/.local/share/twitter-personal`; the config is
 `~/.config/twitter-personal/config.json`. Optional environment overrides:
 `TWITTER_PERSONAL_OUTPUT`, `TWITTER_PERSONAL_CONFIG`, `TWITTER_PERSONAL_CDP`.
@@ -55,15 +57,18 @@ this is a presentation feature, not a network/download blocker.
 
 ## Installation and rollback
 
-Disable the store extension before enabling this fork; leave it installed so its
-preferences remain available. Copy preferences once through the two extension
+Back up the store extension preferences before enabling this fork. Cata removes
+the store registration during the Nix switch; the saved backup is
+`~/.local/state/twitter-personal/store-preferences.json`. On a manual installation,
+disable the store version and leave it installed. Copy preferences once through the two extension
 options pages' `chrome.storage.local` APIs if desired, never by editing Chrome's
 profile files. Cata's Nix launcher loads the stable directory. Mac Chrome requires
 one-time Developer mode → Load unpacked for that directory (the command-line
 load flag is unavailable in branded Chrome). Use the same public manifest key.
 
-To roll back: stop the watcher, disable Personal, enable the store version, and
-reload Twitter. To roll back a fork version, revert the source pin in dotfiles,
+To roll back: stop the watcher, disable Personal, set `twitterExperience.enable`
+to false in Nix and rebuild. Restart Chromium to reinstall the store version,
+restore its saved preferences via the options page storage API, and reload Twitter. To roll back a fork version, revert the source pin in dotfiles,
 activate Home Manager, and reload the extension. No Twitter account data changes.
 
 ## Upstream updates

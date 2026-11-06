@@ -19,6 +19,6 @@ if (!state.twitter || state.twitter.isClosed()) {
 } else {
   await state.twitter.reload({waitUntil:'domcontentloaded'})
 }
-await state.twitter.locator('article[data-testid="tweet"]').first().waitFor({timeout:15000})
+await state.twitter.locator('article[data-testid="tweet"]:visible').first().waitFor({timeout:15000})
 console.log(await snapshot({page:state.twitter,search:/Show media|Hide media|Log in|Something went wrong/}))
 console.log(await getLatestLogs({page:state.twitter,sinceLastCall:true}))

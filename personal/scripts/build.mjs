@@ -21,6 +21,16 @@ for (const [name, expected] of [['content.js', 5], ['options.js', 7], ['backgrou
   const count = (source.match(/chrome\.storage/g) || []).length
   if (count !== expected) throw new Error(`${name}: storage integration changed (${count} vs ${expected}); review upstream`)
   source = source.replaceAll('chrome.storage', 'globalThis.cpftStorage')
+  if (name === 'content.js') {
+    const hook = /^      globalThis\.cpftStorage\.onChanged\.addListener\(onConfigChange\)/gm
+    if ([...source.matchAll(hook)].length !== 1) throw new Error('Page configuration bridge changed; review upstream')
+    source = source.replace(hook, `$&
+      // Restore declared values if the page's own UI tries to change them.
+      const enforced = Object.fromEntries(Object.keys(event.data.changes)
+        .filter(key => Object.hasOwn(globalThis.cpftPersonal.upstreamSettings, key))
+        .map(key => [key, {newValue: globalThis.cpftPersonal.upstreamSettings[key]}]))
+      if (Object.keys(enforced).length) onConfigChange(enforced)`)
+  }
   if (name === 'background.js') source = `import './personal/config.js'\nimport './personal/storage.js'\n${source}`
   fs.writeFileSync(path.join(output, name), source)
 }
