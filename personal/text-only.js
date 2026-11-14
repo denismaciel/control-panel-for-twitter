@@ -9,21 +9,19 @@
     [data-cpft-text-only] [data-cpft-media] { display: none !important; }
     .cpft-card-link { display: none; }
     [data-cpft-text-only] .cpft-card-link { display: block; margin: 8px 0; color: inherit; font: 14px/1.4 system-ui, sans-serif; }
-    .cpft-media-toggle { display: inline-flex; align-items: center; gap: 6px;
-      margin: 10px 0 4px; padding: 0 14px 0 11px; height: 30px;
-      width: fit-content; max-width: 100%; align-self: flex-start;
-      color: color-mix(in srgb, currentColor 62%, transparent);
-      background: color-mix(in srgb, currentColor 4%, transparent);
-      border: 1px solid color-mix(in srgb, currentColor 16%, transparent);
-      border-radius: 9999px; cursor: pointer;
-      font-family: TwitterChirp, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; font-weight: 600; line-height: 1; letter-spacing: 0.01em;
-      transition: color .15s ease, background-color .15s ease, border-color .15s ease; }
-    .cpft-media-toggle svg { width: 16px; height: 16px; flex: none; }
-    .cpft-media-toggle:hover { color: rgb(29, 155, 240);
-      background: rgba(29, 155, 240, 0.1); border-color: rgba(29, 155, 240, 0.45); }
-    .cpft-media-toggle:active { background: rgba(29, 155, 240, 0.18); }
-    .cpft-media-toggle:focus-visible { outline: 2px solid rgb(29, 155, 240); outline-offset: 2px; }
-    .cpft-media-toggle[aria-expanded="true"] { background: transparent; }
+    /* An icon-only peer of X's reply/repost/like actions. */
+    .cpft-media-slot { display: flex; flex: 1 1 0%; align-items: center; justify-content: flex-start; }
+    .cpft-media-toggle { position: relative; display: flex; align-items: center; justify-content: center;
+      width: 20px; height: 20px; padding: 0; margin: 0; border: 0; background: none;
+      color: rgb(113, 118, 123); cursor: pointer; transition: color .2s ease; }
+    .cpft-media-toggle::before { content: ""; position: absolute; inset: -8px; border-radius: 9999px;
+      background: transparent; transition: background-color .2s ease; }
+    .cpft-media-toggle svg { position: relative; width: 18.75px; height: 18.75px; }
+    .cpft-media-toggle:hover, .cpft-media-toggle:focus-visible,
+    .cpft-media-toggle[aria-expanded="true"] { color: rgb(29, 155, 240); }
+    .cpft-media-toggle:hover::before { background: rgba(29, 155, 240, 0.1); }
+    .cpft-media-toggle:focus-visible { outline: none; }
+    .cpft-media-toggle:focus-visible::before { box-shadow: 0 0 0 2px rgb(29, 155, 240); }
   `
   document.documentElement.append(style)
 
@@ -58,8 +56,10 @@
         || tweet.querySelector('[data-testid="tweetText"]')?.textContent || ''
       let record = records.get(tweet)
       if (!record || record.identity !== identity) {
-        record?.button.remove()
-        record = {identity, revealed: false, button: document.createElement('button')}
+        record?.slot.remove()
+        record = {identity, revealed: false, slot: document.createElement('div'), button: document.createElement('button')}
+        record.slot.className = 'cpft-media-slot'
+        record.slot.append(record.button)
         record.button.type = 'button'
         record.button.className = 'cpft-media-toggle'
         record.button.addEventListener('click', event => {
@@ -107,22 +107,25 @@
       if (tweet.hasAttribute('data-cpft-text-only') !== hidden) tweet.toggleAttribute('data-cpft-text-only', hidden)
       if (enabled && media.length) {
         const label = record.revealed ? 'Hide media' : 'Show media'
-        if (record.button.textContent !== label) {
-          const text = document.createElement('span')
-          text.textContent = label
-          record.button.replaceChildren(icon(record.revealed ? 'hide' : 'show'), text)
+        if (record.button.getAttribute('aria-label') !== label) {
+          record.button.setAttribute('aria-label', label)
+          record.button.title = label
+          record.button.replaceChildren(icon(record.revealed ? 'hide' : 'show'))
         }
         record.button.setAttribute('aria-expanded', String(record.revealed))
-        if (!record.button.isConnected) {
+        if (!record.slot.isConnected) {
+          // Sit after like, before the bookmark/share cluster.
           const actions = tweet.querySelector('[role="group"]')
-          if (actions) actions.before(record.button)
-          else tweet.append(record.button)
+          const bookmark = actions && [...actions.children].find(slot => slot.querySelector('[data-testid="bookmark"], [data-testid="removeBookmark"]'))
+          if (bookmark) bookmark.before(record.slot)
+          else if (actions) actions.append(record.slot)
+          else tweet.append(record.slot)
         }
         if (hidden) for (const video of tweet.querySelectorAll('video')) {
           if (!video.paused) video.pause()
         }
       } else {
-        record.button.remove()
+        record.slot.remove()
         record.revealed = false
       }
     }

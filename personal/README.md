@@ -51,7 +51,7 @@ runtime platform and mutable per-tweet state cannot be declared.
 
 Text-only mode hides tweet media and replaces preview cards with text links.
 Authors, avatars, timestamps, text, quoted text, composer and actions remain.
-Media-only tweets retain a Show media button. Revealing is per rendered tweet;
+Tweets with hidden media get an icon-only Show media action beside like. Revealing is per rendered tweet;
 it resets on navigation or DOM recycling. Hidden video playback is paused;
 this is a presentation feature, not a network/download blocker.
 
