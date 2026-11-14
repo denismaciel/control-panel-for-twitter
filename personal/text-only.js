@@ -9,6 +9,11 @@
     [data-cpft-text-only] [data-cpft-media] { display: none !important; }
     .cpft-card-link { display: none; }
     [data-cpft-text-only] .cpft-card-link { display: block; margin: 8px 0; color: inherit; font: 14px/1.4 system-ui, sans-serif; }
+    /* Calm avatars: hidden until the avatar spot is hovered or focused. */
+    [data-cpft-calm-avatars] article[data-testid="tweet"] [data-testid^="UserAvatar-Container"] {
+      opacity: 0; transition: opacity .2s ease; }
+    [data-cpft-calm-avatars] article[data-testid="tweet"] [data-testid^="UserAvatar-Container"]:is(:hover, :focus-within) {
+      opacity: 1; }
     /* An icon-only peer of X's reply/repost/like actions. */
     .cpft-media-slot { display: flex; flex: 1 1 0%; align-items: center; justify-content: flex-start; }
     .cpft-media-toggle { position: relative; display: flex; align-items: center; justify-content: center;
@@ -139,6 +144,7 @@
     cpftStorage.local.get({enabled: true}, config => {
       chrome.storage.local.get({personalTextOnly: false}, local => {
         enabled = config.enabled && (cpftPersonal.settings.textOnly ?? local.personalTextOnly)
+        document.documentElement.toggleAttribute('data-cpft-calm-avatars', Boolean(enabled))
         schedule()
       })
     })

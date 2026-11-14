@@ -4,10 +4,11 @@ export async function run({context}) {
   const page = await context.newPage()
   try {
     await page.goto('about:blank')
-    await page.setContent(`<main>
+    // Background tabs can stall CSS transitions; assert end states only.
+    await page.setContent(`<style>*{transition:none!important}</style><main>
       <div data-testid="tweetTextarea_0"><img alt="composer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></div>
       <article data-testid="tweet"><a href="/test/status/1"><time>Now</time></a>
-        <div data-testid="Tweet-User-Avatar"><img alt="avatar"></div>
+        <div data-testid="Tweet-User-Avatar"><div data-testid="UserAvatar-Container-test"><img alt="avatar"></div></div>
         <div data-testid="tweetText">Hello <a href="https://example.com">world</a></div>
         <div data-testid="tweetPhoto"><img alt="photo"></div>
         <div data-testid="videoComponent"><div data-testid="videoPlayer"><video></video></div></div>
@@ -33,6 +34,10 @@ export async function run({context}) {
     assert.equal(await page.getByRole('link',{name:'Article headline'}).last().isVisible(),true)
     assert.equal(await page.getByAltText('avatar').isVisible(),true)
     assert.equal(await page.getByAltText('composer').isVisible(),true)
+    await page.waitForFunction(()=>getComputedStyle(document.querySelector('[data-testid^="UserAvatar-Container"]')).opacity==='0')
+    await page.getByAltText('avatar').hover()
+    await page.waitForFunction(()=>getComputedStyle(document.querySelector('[data-testid^="UserAvatar-Container"]')).opacity==='1')
+    await page.mouse.move(0,0)
     await toggle.click()
     await page.getByRole('button',{name:'Hide media'}).waitFor()
     assert.equal(await page.getByAltText('photo',{exact:true}).isVisible(),true)
@@ -48,11 +53,12 @@ export async function run({context}) {
     await page.evaluate(()=>{fixtureState.enabled=false;fixtureState.listeners.forEach(fn=>fn({},'local'))})
     await page.getByRole('button',{name:'Show media',exact:true}).first().waitFor({state:'detached'})
     assert.equal(await page.getByAltText('dynamic photo').isVisible(),true)
+    await page.waitForFunction(()=>getComputedStyle(document.querySelector('[data-testid^="UserAvatar-Container"]')).opacity==='1')
     await page.evaluate(()=>{fixtureState.enabled=true;fixtureState.personalTextOnly=false;fixtureState.listeners.forEach(fn=>fn({},'local'))})
     assert.equal(await page.getByAltText('photo',{exact:true}).isVisible(),true)
     await page.evaluate(()=>{cpftPersonal.settings.textOnly=true;fixtureState.listeners.forEach(fn=>fn({},'local'))})
     await page.getByRole('button',{name:'Show media',exact:true}).first().waitFor()
     assert.equal(await page.getByAltText('photo',{exact:true}).isVisible(),false)
-    return 'PASS: photos, video containers, preview imagery, quotes, text/links/avatar/composer preservation, reveal, recycled nodes, dynamic media-only tweets, disable/restore, Nix override'
+    return 'PASS: photos, video containers, preview imagery, quotes, text/links/avatar/composer preservation, reveal, recycled nodes, dynamic media-only tweets, disable/restore, Nix override, calm avatars'
   } finally { await page.close() }
 }
