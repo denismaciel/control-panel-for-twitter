@@ -32,6 +32,18 @@ export async function run({context}) {
     assert.equal(await page.getByAltText('preview').isVisible(),false)
     assert.equal(await page.getByText('Quoted text').isVisible(),true)
     assert.equal(await page.getByRole('link',{name:'Article headline'}).last().isVisible(),true)
+    const card = page.locator('[data-testid="card.wrapper"]')
+    const preview = page.locator('.cpft-card-link')
+    assert.equal(await preview.locator('.cpft-card-title').textContent(), 'Article headline')
+    await card.locator('a').evaluate(a => {
+      a.href = 'https://t.co/example'
+      a.setAttribute('aria-label', 'github.com GitHub - vercel-labs/ui: A library of behaviors')
+      a.textContent = 'GitHub - vercel-labs/ui: A library of behaviors'
+    })
+    await preview.getByText('vercel-labs/ui', {exact:true}).waitFor()
+    assert.equal(await preview.getAttribute('href'), 'https://t.co/example')
+    assert.equal(await preview.locator('.cpft-card-source').textContent(), 'github.com')
+    assert.equal(await preview.locator('.cpft-card-description').textContent(), 'A library of behaviors')
     assert.equal(await page.getByAltText('avatar').isVisible(),true)
     assert.equal(await page.getByAltText('composer').isVisible(),true)
     await page.waitForFunction(()=>getComputedStyle(document.querySelector('[data-testid^="UserAvatar-Container"]')).opacity==='0')

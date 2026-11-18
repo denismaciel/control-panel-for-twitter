@@ -9,7 +9,17 @@
     [data-cpft-text-only] [data-cpft-media] { display: none !important; }
     .cpft-image-description { white-space: pre-wrap; overflow-wrap: anywhere; margin-block: 0.5em; }
     .cpft-card-link { display: none; }
-    [data-cpft-text-only] .cpft-card-link { display: block; margin: 8px 0; color: inherit; font: 14px/1.4 system-ui, sans-serif; }
+    [data-cpft-text-only] .cpft-card-link {
+      display: grid; gap: 2px; margin: 6px 0; padding: 2px 0 2px 12px;
+      border-inline-start: 2px solid color-mix(in srgb, currentColor 24%, transparent);
+      color: inherit; font: inherit; line-height: 1.35; text-decoration: none;
+      overflow-wrap: anywhere;
+    }
+    .cpft-card-link > .cpft-card-title { font-weight: 600; }
+    .cpft-card-link > .cpft-card-source { font-size: .8em; color: var(--cpft-text-secondary, inherit); }
+    .cpft-card-link > [hidden] { display: none; }
+    .cpft-card-link:is(:hover, :focus-visible) > .cpft-card-title { text-decoration: underline; }
+    .cpft-card-link:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
     /* Calm avatars: hidden until the avatar spot is hovered or focused. */
     [data-cpft-calm-avatars] article[data-testid="tweet"] [data-testid^="UserAvatar-Container"] {
       opacity: 0; transition: opacity .2s ease; }
@@ -52,6 +62,48 @@
       svg.append(path)
     }
     return svg
+  }
+
+  function updateCardLink(card) {
+    const source = card.querySelector('a[href]')
+    let link = card.previousElementSibling
+    if (!link?.classList.contains('cpft-card-link')) link = null
+    if (!source) {
+      link?.remove()
+      return
+    }
+
+    // The upstream headline restorer already separates publisher and headline.
+    // Native cards often carry both in the accessible label of a t.co link.
+    const restored = source.querySelector('.cpft_link_headline')
+    const label = source.getAttribute('aria-label')?.trim() || source.textContent.trim()
+    const prefix = label.match(/^((?:[\w-]+\.)+[a-z]{2,})(?:\s+|$)/i)
+    const host = new URL(source.href).hostname
+    const site = restored?.children[0]?.textContent.trim() || prefix?.[1] || (host === 't.co' ? '' : host)
+    const headline = restored?.children[1]?.textContent.trim() || label.slice(prefix?.[0].length || 0).trim()
+    const repo = /^(?:www\.)?github\.com$/i.test(site)
+      && headline.match(/^GitHub\s*[-–—]\s*([\w.-]+\/[\w.-]+)(?:\s*:\s*(.+))?$/i)
+    const title = repo?.[1] || headline || site || host || source.href
+    const fields = [title, repo?.[2] || '', site === title ? '' : site]
+
+    if (!link) {
+      link = document.createElement('a')
+      link.className = 'cpft-card-link'
+      link.target = '_blank'
+      link.rel = 'noopener noreferrer'
+      for (const field of ['title', 'description', 'source']) {
+        const span = document.createElement('span')
+        span.className = 'cpft-card-' + field
+        link.append(span)
+      }
+      card.before(link)
+    }
+    link.href = source.href
+    fields.forEach((text, index) => {
+      const span = link.children[index]
+      if (span.textContent !== text) span.textContent = text
+      span.hidden = !text
+    })
   }
 
   // Several photos can share a collapsed layout wrapper. Keep their descriptions
@@ -115,20 +167,7 @@
       const media = [...tweet.querySelectorAll(mediaSelector)]
       for (let element of media) {
         if (element.matches('[data-testid="card.wrapper"]')) {
-          const source = element.querySelector('a[href]')
-          if (source) {
-            let link = element.previousElementSibling
-            if (!link?.classList.contains('cpft-card-link')) {
-              link = document.createElement('a')
-              link.className = 'cpft-card-link'
-              element.before(link)
-            }
-            link.href = source.href
-            link.target = '_blank'
-            link.rel = 'noopener noreferrer'
-            const title = source.getAttribute('aria-label') || source.textContent.trim() || new URL(source.href).hostname
-            if (link.textContent !== title) link.textContent = title
-          }
+          updateCardLink(element)
         } else {
           // Collapse the media's aspect-ratio wrappers too, stopping before text,
           // authors, actions or quotes. Do not rely on X's generated CSS classes.
