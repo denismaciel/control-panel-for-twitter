@@ -7,6 +7,7 @@
   const style = document.createElement('style')
   style.textContent = `
     [data-cpft-text-only] [data-cpft-media] { display: none !important; }
+    .cpft-image-description { white-space: pre-wrap; overflow-wrap: anywhere; margin-block: 0.5em; }
     .cpft-card-link { display: none; }
     [data-cpft-text-only] .cpft-card-link { display: block; margin: 8px 0; color: inherit; font: 14px/1.4 system-ui, sans-serif; }
     /* Calm avatars: hidden until the avatar spot is hovered or focused. */
@@ -51,6 +52,38 @@
       svg.append(path)
     }
     return svg
+  }
+
+  // Several photos can share a collapsed layout wrapper. Keep their descriptions
+  // together, next to that wrapper, including when it belongs to a quoted tweet.
+  function updateDescriptions(tweet, hidden) {
+    const descriptions = new Map()
+    if (hidden) {
+      for (const image of tweet.querySelectorAll('[data-testid="tweetPhoto"] img[alt], [data-testid="nestedQuotePreviewMedia"] img[alt]')) {
+        const alt = image.alt.trim()
+        if (!alt || /^(?:image|photo|imagem|foto|bild|imagen|embedded video|gif)$/i.test(alt)) continue
+        if (image.closest('[data-testid="videoComponent"], [data-testid="videoPlayer"], [data-testid="previewInterstitial"], [data-testid="card.wrapper"]')) continue
+        let wrapper = image.closest('[data-cpft-media]')
+        if (!wrapper) continue
+        let outer
+        while ((outer = wrapper.parentElement.closest('[data-cpft-media]'))) wrapper = outer
+        if (!descriptions.has(wrapper)) descriptions.set(wrapper, [])
+        descriptions.get(wrapper).push(alt)
+      }
+    }
+    for (const caption of tweet.querySelectorAll('.cpft-image-description')) {
+      if (!descriptions.has(caption.previousElementSibling)) caption.remove()
+    }
+    for (const [wrapper, lines] of descriptions) {
+      let caption = wrapper.nextElementSibling
+      if (!caption?.classList.contains('cpft-image-description')) {
+        caption = document.createElement('p')
+        caption.className = 'cpft-image-description'
+        wrapper.after(caption)
+      }
+      const text = lines.map(line => 'Image description: ' + line).join('\n')
+      if (caption.textContent !== text) caption.textContent = text
+    }
   }
 
   function scan() {
@@ -109,6 +142,7 @@
         if (!element.hasAttribute('data-cpft-media')) element.setAttribute('data-cpft-media', '')
       }
       const hidden = enabled && !record.revealed && media.length > 0
+      updateDescriptions(tweet, hidden)
       if (tweet.hasAttribute('data-cpft-text-only') !== hidden) tweet.toggleAttribute('data-cpft-text-only', hidden)
       if (enabled && media.length) {
         const label = record.revealed ? 'Hide media' : 'Show media'
@@ -148,7 +182,7 @@
       })
     })
   }
-  new MutationObserver(schedule).observe(document.documentElement, {childList: true, subtree: true})
+  new MutationObserver(schedule).observe(document.documentElement, {childList: true, subtree: true, attributes: true, attributeFilter: ['alt']})
   chrome.storage.onChanged.addListener((_, area) => { if (area === 'local') refresh() })
   // Stop hidden videos if the site tries to autoplay them after our scan.
   document.addEventListener('play', event => {
