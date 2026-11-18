@@ -12,7 +12,7 @@
     [data-cpft-text-only] .cpft-card-link {
       display: grid; gap: 2px; margin: 6px 0; padding: 2px 0 2px 12px;
       border-inline-start: 2px solid color-mix(in srgb, currentColor 24%, transparent);
-      color: inherit; font: inherit; line-height: 1.35; text-decoration: none;
+      color: inherit; font: 15px/1.35 system-ui, sans-serif; text-decoration: none;
       overflow-wrap: anywhere;
     }
     .cpft-card-link > .cpft-card-title { font-weight: 600; }
