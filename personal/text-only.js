@@ -118,13 +118,12 @@
           record.button.replaceChildren(icon(record.revealed ? 'hide' : 'show'))
         }
         record.button.setAttribute('aria-expanded', String(record.revealed))
-        if (!record.slot.isConnected) {
-          // Sit after like, before the bookmark/share cluster.
-          const actions = tweet.querySelector('[role="group"]')
-          const bookmark = actions && [...actions.children].find(slot => slot.querySelector('[data-testid="bookmark"], [data-testid="removeBookmark"]'))
-          if (bookmark) bookmark.before(record.slot)
-          else if (actions) actions.append(record.slot)
-          else tweet.append(record.slot)
+        // X may mount the action bar or bookmark after the media.
+        const actions = tweet.querySelector('[role="group"]')
+        const parent = actions || tweet
+        const bookmark = actions && [...actions.children].find(slot => slot.querySelector('[data-testid="bookmark"], [data-testid="removeBookmark"]'))
+        if (record.slot.parentElement !== parent || (bookmark && record.slot.nextElementSibling !== bookmark)) {
+          parent.insertBefore(record.slot, bookmark || null)
         }
         if (hidden) for (const video of tweet.querySelectorAll('video')) {
           if (!video.paused) video.pause()

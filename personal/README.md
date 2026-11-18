@@ -37,6 +37,14 @@ console.log(await tests.run({context}))
 Twitter afterwards (or restart Chromium). A Home Manager activation also restores
 the pinned build. Development changes are deliberately not permanent deployment.
 
+## Release on Cata
+
+Commit your changes on `personal` and run `twitter-personal-release`. It tests
+the committed snapshot, pushes it to the fork, updates the dotfiles pin, rebuilds
+Cata, compares the installed bundle, reloads Chromium’s extension, and commits
+the pin locally. Refresh any open X tabs to pick up the new content script.
+You can rerun the command after an interrupted release.
+
 ## Preferences
 
 ```json
